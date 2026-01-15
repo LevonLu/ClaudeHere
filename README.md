@@ -6,6 +6,7 @@
 
 - **双位置支持**: 支持文件夹背景和文件夹本身两处右键菜单
 - **快速启动**: 右键即可在当前目录启动Claude Code
+- **交互式菜单**: 直接运行脚本即可通过友好的菜单界面进行操作
 - **使用Windows Terminal**: 使用现代化的终端体验
 - **Git Bash集成**: 在Git Bash环境中运行Claude
 - **可自定义**: 支持自定义菜单名称和图标
@@ -35,16 +36,6 @@
 .\Install-ClaudeHere.ps1 -Action install -Language auto
 ```
 
-### 贡献翻译
-
-欢迎贡献新的语言翻译：
-
-1. 在脚本目录创建语言文件夹（如 `fr-FR`、`ja-JP` 等）
-2. 复制 `en-US/Install-ClaudeHere.psd1` 到新文件夹
-3. 翻译所有字符串值，保持键名不变
-4. 更新脚本中的 `$supportedCultures` 数组
-5. 提交Pull Request
-
 ## 系统要求
 
 - Windows 10/11
@@ -57,7 +48,17 @@
 
 ### 安装
 
-以管理员身份运行PowerShell，执行：
+**方式一：交互式菜单（推荐）**
+
+以管理员身份运行PowerShell，直接执行脚本：
+
+```powershell
+.\Install-ClaudeHere.ps1
+```
+
+将会显示交互式菜单，选择"安装"选项即可。
+
+**方式二：命令行参数**
 
 ```powershell
 .\Install-ClaudeHere.ps1 -Action install
@@ -75,6 +76,9 @@
 ## 命令
 
 ```powershell
+# 直接运行 - 进入交互式菜单
+.\Install-ClaudeHere.ps1
+
 # 安装右键菜单（自动检测语言）
 .\Install-ClaudeHere.ps1 -Action install
 
@@ -98,7 +102,7 @@
 
 | 参数 | 可选值 | 说明 |
 |------|--------|------|
-| `-Action` | `install`, `uninstall`, `update`, `help` | 要执行的操作 |
+| `-Action` | `install`, `uninstall`, `update`, `help`, `interactive` | 要执行的操作，默认为 `interactive`（交互式菜单） |
 | `-Language` | `auto`, `en-US`, `zh-CN` | 界面语言，默认为 `auto`（自动检测系统语言） |
 
 ## 配置说明

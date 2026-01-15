@@ -24,8 +24,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet('install', 'uninstall', 'update', 'help')]
-    [string]$Action = 'help',
+    [ValidateSet('install', 'uninstall', 'update', 'help', 'interactive', '')]
+    [string]$Action = 'interactive',
 
     [Parameter(Mandatory=$false)]
     [ValidateSet('en-US', 'zh-CN', 'auto')]
@@ -70,6 +70,7 @@ function Get-Messages {
         ErrorNotInstalled = "No installed right-click menu found, please run install first."
         ErrorRegistryCreateFailed = "Failed to create registry entries"
         ErrorRegistryRemoveFailed = "Failed to remove registry entries"
+        ErrorInvalidChoice = "Invalid choice. Please enter a number between 1 and 5."
         Warning = "Warning"
         WarningClaudeNotFound = "claude command not found in system PATH."
         WarningClaudeInstallNote = "Make sure Claude Code is installed and added to PATH after installation."
@@ -141,6 +142,14 @@ function Get-Messages {
         HelpNoteClaude = "- Claude command must be available in system PATH"
         HelpSeparator1 = "==============================================================================="
         HelpSeparator2 = ""
+        MenuTitle = "Claude Here - Interactive Menu"
+        MenuOptionInstall = "1. Install - Add right-click menu"
+        MenuOptionUninstall = "2. Uninstall - Remove right-click menu"
+        MenuOptionUpdate = "3. Update - Update existing configuration"
+        MenuOptionHelp = "4. Help - Display help information"
+        MenuOptionExit = "5. Exit"
+        MenuPrompt = "Please select an option (1-5)"
+        MenuRunningAction = "Running: {0}..."
     }
 
     # 中文消息
@@ -229,6 +238,14 @@ function Get-Messages {
         HelpNoteClaude = "- Claude 命令必须在系统 PATH 中可用"
         HelpSeparator1 = "==============================================================================="
         HelpSeparator2 = ""
+        MenuTitle = "Claude Here - 交互式菜单"
+        MenuOptionInstall = "1. 安装 - 添加右键菜单"
+        MenuOptionUninstall = "2. 卸载 - 移除右键菜单"
+        MenuOptionUpdate = "3. 更新 - 更新现有配置"
+        MenuOptionHelp = "4. 帮助 - 显示帮助信息"
+        MenuOptionExit = "5. 退出"
+        MenuPrompt = "请选择一个选项 (1-5)"
+        MenuRunningAction = "正在执行：{0}..."
     }
 
     switch ($Culture) {
@@ -313,9 +330,85 @@ Initialize-Localization | Out-Null
 #endregion
 
 
+#region 交互式菜单
+
+function Show-InteractiveMenu {
+    <#
+    .SYNOPSIS
+        显示交互式菜单让用户选择操作
+    #>
+
+    $separator = Get-LocalizedString -Key 'HelpSeparator1'
+
+    while ($true) {
+        Clear-Host
+        Write-Host "`n$separator" -ForegroundColor Cyan
+        Write-Host "                    $(Get-LocalizedString -Key 'MenuTitle')" -ForegroundColor Cyan
+        Write-Host "$separator`n" -ForegroundColor Cyan
+
+        Write-Host "$(Get-LocalizedString -Key 'MenuOptionInstall')" -ForegroundColor White
+        Write-Host "$(Get-LocalizedString -Key 'MenuOptionUninstall')" -ForegroundColor White
+        Write-Host "$(Get-LocalizedString -Key 'MenuOptionUpdate')" -ForegroundColor White
+        Write-Host "$(Get-LocalizedString -Key 'MenuOptionHelp')" -ForegroundColor White
+        Write-Host "$(Get-LocalizedString -Key 'MenuOptionExit')" -ForegroundColor White
+
+        Write-Host "`n$separator`n" -ForegroundColor Cyan
+
+        $choice = Read-Host "$(Get-LocalizedString -Key 'MenuPrompt')"
+
+        switch ($choice) {
+            '1' {
+                Write-Host "`n$(Get-LocalizedString -Key 'MenuRunningAction' -Arguments (Get-LocalizedString -Key 'HelpActionInstall'))`n" -ForegroundColor Cyan
+                Test-AdminPrivileges
+                Install-ClaudeHere
+                Pause-AfterAction
+            }
+            '2' {
+                Write-Host "`n$(Get-LocalizedString -Key 'MenuRunningAction' -Arguments (Get-LocalizedString -Key 'HelpActionUninstall'))`n" -ForegroundColor Cyan
+                Test-AdminPrivileges
+                Uninstall-ClaudeHere
+                Pause-AfterAction
+            }
+            '3' {
+                Write-Host "`n$(Get-LocalizedString -Key 'MenuRunningAction' -Arguments (Get-LocalizedString -Key 'HelpActionUpdate'))`n" -ForegroundColor Cyan
+                Test-AdminPrivileges
+                Update-ClaudeHere
+                Pause-AfterAction
+            }
+            '4' {
+                Write-Host "`n$(Get-LocalizedString -Key 'MenuRunningAction' -Arguments (Get-LocalizedString -Key 'HelpActionHelp'))`n" -ForegroundColor Cyan
+                Show-Help
+                Pause-AfterAction
+            }
+            '5' {
+                Write-Host "`n$(Get-LocalizedString -Key 'Info') - Exiting...`n" -ForegroundColor Gray
+                exit 0
+            }
+            default {
+                Write-Host "`n[$(Get-LocalizedString -Key 'Error')] $(Get-LocalizedString -Key 'ErrorInvalidChoice')" -ForegroundColor Red
+                Start-Sleep -Seconds 2
+            }
+        }
+    }
+}
+
+function Pause-AfterAction {
+    Write-Host "`n$(Get-LocalizedString -Key 'Info') - Press any key to return to menu..." -ForegroundColor Gray
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
+
+#endregion
+
+
 #region 主函数
 
 function Main {
+    # 处理交互模式和空字符串
+    if ($Action -eq 'interactive' -or $Action -eq '') {
+        Show-InteractiveMenu
+        return
+    }
+
     switch ($Action) {
         'install'  {
             Test-AdminPrivileges
